@@ -3,6 +3,7 @@ export type SectionId = 'weapon' | 'equipment'
 export interface AttachmentOption {
   id: string
   name: string
+  modelUrl?: string | null
 }
 
 export interface AttachmentCategory {
@@ -16,24 +17,37 @@ export interface WeaponModel {
   name: string
   subtitle: string
   description: string
-  /** Path under /public/models, e.g. "/models/weapons/ak74.glb". Left empty until real assets are supplied. */
-  modelUrl?: string
+  modelUrl?: string | null
   categories: AttachmentCategory[]
 }
 
 export interface EquipmentOption {
   id: string
   name: string
-  /** Path under /public/models. Left empty until real assets are supplied. */
-  modelUrl?: string
+  modelUrl?: string | null
   /** Accent color used for the placeholder preview while no model is supplied. */
   previewColor: string
+  /** Anchor position for the attached .glb, in the mannequin's local space. */
+  offset?: { x: number; y: number; z: number }
+  /** Scale multiplier applied to the attached .glb at its native export size. */
+  scale?: number
 }
 
 export interface EquipmentSlot {
   id: string
   name: string
   options: EquipmentOption[]
+}
+
+export interface Prices {
+  weapon: number
+  equipment: number
+}
+
+export interface CatalogResponse {
+  weapons: WeaponModel[]
+  equipmentSlots: EquipmentSlot[]
+  prices: Prices
 }
 
 export interface OrderPayload {

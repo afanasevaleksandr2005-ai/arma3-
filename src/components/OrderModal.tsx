@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { EQUIPMENT_SECTION_PRICE, WEAPON_SECTION_PRICE } from '../data/catalog'
+import { ApiError, api } from '../lib/api'
 import { buildSelectionSummary } from '../lib/orderSummary'
 import { useBuilderStore } from '../store/useBuilderStore'
 import type { OrderPayload } from '../types'
@@ -12,9 +12,12 @@ export function OrderModal() {
   const open = useBuilderStore((s) => s.orderModalOpen)
   const close = useBuilderStore((s) => s.closeOrderModal)
   const activeSection = useBuilderStore((s) => s.activeSection)
+  const weapons = useBuilderStore((s) => s.weapons)
+  const equipmentSlots = useBuilderStore((s) => s.equipmentSlots)
   const selectedWeaponId = useBuilderStore((s) => s.selectedWeaponId)
   const weaponSelection = useBuilderStore((s) => s.weaponSelection)
   const equipmentSelection = useBuilderStore((s) => s.equipmentSelection)
+  const prices = useBuilderStore((s) => s.prices)
 
   const [playerName, setPlayerName] = useState('')
   const [discord, setDiscord] = useState('')
@@ -25,9 +28,11 @@ export function OrderModal() {
 
   if (!open) return null
 
-  const price = activeSection === 'weapon' ? WEAPON_SECTION_PRICE : EQUIPMENT_SECTION_PRICE
+  const price = activeSection === 'weapon' ? prices.weapon : prices.equipment
   const summary = buildSelectionSummary({
     section: activeSection,
+    weapons,
+    equipmentSlots,
     selectedWeaponId,
     weaponSelection,
     equipmentSelection,
@@ -71,16 +76,13 @@ export function OrderModal() {
     setStatus('submitting')
     setErrorMessage('')
     try {
-      const response = await fetch(ORDER_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!response.ok) throw new Error(`Сервер вернул ${response.status}`)
+      await api.post(ORDER_API_URL, payload)
       setStatus('success')
-    } catch {
+    } catch (error) {
       setStatus('error')
-      setErrorMessage('Не удалось отправить заказ. Попробуйте ещё раз позже.')
+      setErrorMessage(
+        error instanceof ApiError ? error.message : 'Не удалось отправить заказ. Попробуйте ещё раз позже.',
+      )
     }
   }
 

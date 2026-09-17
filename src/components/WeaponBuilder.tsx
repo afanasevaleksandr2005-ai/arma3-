@@ -1,4 +1,3 @@
-import { WEAPONS, WEAPON_SECTION_PRICE } from '../data/catalog'
 import { useBuilderStore } from '../store/useBuilderStore'
 import { ModelStage } from './ModelStage'
 import { OptionList } from './OptionList'
@@ -6,18 +5,28 @@ import { PriceBar } from './PriceBar'
 import { WeaponPlaceholder } from './WeaponPlaceholder'
 
 export function WeaponBuilder() {
+  const weapons = useBuilderStore((s) => s.weapons)
   const selectedWeaponId = useBuilderStore((s) => s.selectedWeaponId)
   const weaponSelection = useBuilderStore((s) => s.weaponSelection)
   const selectWeapon = useBuilderStore((s) => s.selectWeapon)
   const selectWeaponAttachment = useBuilderStore((s) => s.selectWeaponAttachment)
   const openOrderModal = useBuilderStore((s) => s.openOrderModal)
+  const price = useBuilderStore((s) => s.prices.weapon)
 
-  const weapon = WEAPONS.find((item) => item.id === selectedWeaponId) ?? WEAPONS[0]
+  const weapon = weapons.find((item) => item.id === selectedWeaponId) ?? weapons[0]
+
+  if (!weapon) {
+    return (
+      <div className="flex h-full items-center justify-center rounded-xl border border-white/5 bg-white/[0.015] text-sm text-neutral-500">
+        Пока нет добавленного оружия. Загляните позже.
+      </div>
+    )
+  }
 
   return (
     <div className="grid h-full grid-cols-[220px_1fr_320px] gap-5">
       <aside className="flex flex-col gap-2 overflow-y-auto pr-1">
-        {WEAPONS.map((item) => (
+        {weapons.map((item) => (
           <button
             key={item.id}
             type="button"
@@ -41,7 +50,7 @@ export function WeaponBuilder() {
         </div>
         <div className="min-h-0 flex-1">
           <ModelStage
-            modelUrl={weapon.modelUrl}
+            modelUrl={weapon.modelUrl ?? undefined}
             placeholder={
               <WeaponPlaceholder
                 weaponId={weapon.id}
@@ -63,12 +72,12 @@ export function WeaponBuilder() {
               key={category.id}
               title={category.name}
               options={category.options}
-              selectedId={weaponSelection[category.id] ?? category.options[0].id}
+              selectedId={weaponSelection[category.id] ?? category.options[0]?.id ?? ''}
               onSelect={(optionId) => selectWeaponAttachment(category.id, optionId)}
             />
           ))}
         </div>
-        <PriceBar price={WEAPON_SECTION_PRICE} onOrder={openOrderModal} />
+        <PriceBar price={price} onOrder={openOrderModal} />
       </aside>
     </div>
   )
